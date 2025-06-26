@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timestamp Logger</title>
+  <style>
+    :root {
+      --bg-color: #f2f2f2;
+      --text-color: #000;
+      --log-bg: #fff;
+    }
+    [data-theme="dark"] {
+      --bg-color: #1e1e1e;
+      --text-color: #fff;
+      --log-bg: #2c2c2c;
+    }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+    h1 {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .timer {
+      font-size: 2em;
+      text-align: center;
+      margin: 1rem 0;
+    }
+    .controls, .tags, .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    button {
+      padding: 0.8rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      font-size: 1rem;
+      padding: 0.5rem;
+      flex: 1;
+    }
+    .log {
+      background: var(--log-bg);
+      padding: 1rem;
+      border-radius: 5px;
+      margin-top: 1rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      margin: 0.2rem 0;
+    }
+    .toggle-theme {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-theme" onclick="toggleTheme()" id="themeToggle">🌙</button>
+  <h1>Timestamp Logger</h1>
+
+  <div class="header">
+    <input type="text" id="sessionTitle" placeholder="Session Title (e.g., Alan Wake Ep 1)">
+  </div>
+
+  <div class="timer" id="timer">00:00:00</div>
+
+  <div class="controls">
+    <button onclick="startTimer()">▶</button>
+    <button onclick="pauseTimer()">⏸</button>
+    <button onclick="resetTimer()">⏹</button>
+  </div>
+
+  <div class="tags">
+    <button onclick="logTag('CUTSCENE')">CUTSCENE</button>
+    <button onclick="logTag('BOSS FIGHT')">BOSS FIGHT</button>
+    <button onclick="logTag('CLIP')">CLIP</button>
+    <button onclick="logTag('CHAT')">CHAT</button>
+  </div>
+
+  <div class="tags">
+    <input type="text" id="customTag" placeholder="Custom Tag">
+    <button onclick="logCustomTag()">Log Custom</button>
+  </div>
+
+  <div class="log" id="log"></div>
+  <div class="controls">
+    <button onclick="copyLog()">Copy to Clipboard</button>
+  </div>
+
+  <script>
+    let startTime = null;
+    let timerInterval = null;
+    let elapsed = 0;
+    const log = [];
+
+    function updateDisplay() {
+      const totalSeconds = Math.floor(elapsed / 1000);
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+      document.getElementById('timer').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    function tick() {
+      elapsed = Date.now() - startTime;
+      updateDisplay();
+    }
+
+    function startTimer() {
+      if (!startTime) {
+        startTime = Date.now() - elapsed;
+        timerInterval = setInterval(tick, 250);
+      }
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      startTime = null;
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      elapsed = 0;
+      updateDisplay();
+    }
+
+    function logTag(tag) {
+      const timestamp = document.getElementById('timer').textContent;
+      const entry = `${timestamp} — ${tag}`;
+      log.push(entry);
+      const logDiv = document.getElementById('log');
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.textContent = entry;
+      logDiv.appendChild(div);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function logCustomTag() {
+      const input = document.getElementById('customTag');
+      const tag = input.value.trim();
+      if (tag) {
+        logTag(tag);
+      }
+    }
+
+    function copyLog() {
+      const sessionTitle = document.getElementById('sessionTitle').value.trim();
+      const header = sessionTitle ? sessionTitle + "\n\n" : "";
+      const text = header + log.join('\n');
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        alert('Timestamps copied to clipboard!');
+      } catch (err) {
+        alert('Failed to copy text');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const toggleBtn = document.getElementById('themeToggle');
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      toggleBtn.textContent = isDark ? '🌙' : '☀️';
+    }
+
+    // Prevent accidental refresh/navigation away
+    window.addEventListener('beforeunload', function (e) {
+      if (log.length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  </script>
+</body>
+</html>
