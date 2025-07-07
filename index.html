@@ -8,67 +8,287 @@
     :root {
       --bg-color: #f2f2f2;
       --text-color: #000;
+      --button-bg: #e0e0e0;
+      --button-hover-bg: #c7c7c7; /* Slightly darker hover for light mode */
+      --button-active-bg: #b0b0b0; /* Active state for button press */
       --log-bg: #fff;
+      --timer-running-shadow: 0 0 15px rgba(76, 175, 80, 0.6); /* Green shadow */
+      --timer-running-color: #4CAF50; /* Green text */
     }
     [data-theme="dark"] {
       --bg-color: #1e1e1e;
       --text-color: #fff;
+      --button-bg: #3a3a3a;
+      --button-hover-bg: #4a4a4a; /* Slightly lighter hover for dark mode */
+      --button-active-bg: #5a5a5a; /* Active state for button press */
       --log-bg: #2c2c2c;
+      --timer-running-shadow: 0 0 15px rgba(40, 167, 69, 0.6); /* Darker green shadow */
+      --timer-running-color: #28a745; /* Darker green text */
     }
     body {
       font-family: sans-serif;
       padding: 1rem;
       background: var(--bg-color);
       color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center content horizontally */
+      min-height: 100vh; /* Ensure body takes full viewport height */
+      box-sizing: border-box; /* Include padding in element's total width and height */
+      transition: background 0.3s ease, color 0.3s ease; /* Smooth theme transition */
     }
     h1 {
       text-align: center;
-      margin-top: 2rem;
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
     }
     .timer {
-      font-size: 2em;
+      font-size: 2.5em;
       text-align: center;
       margin: 1rem 0;
+      font-weight: bold;
+      transition: text-shadow 0.3s ease, color 0.3s ease; /* Smooth shadow transition */
+    }
+    .timer.running {
+      color: var(--timer-running-color);
+      text-shadow: var(--timer-running-shadow);
     }
     .controls, .tags, .header {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 0.5rem;
-      margin: 1rem 0;
+      gap: 0.75rem;
+      margin: 0.75rem 0;
+      width: 100%;
+      max-width: 500px;
     }
     button {
-      padding: 0.8rem 1.2rem;
-      font-size: 1rem;
+      padding: 1.2rem 1.5rem;
+      font-size: 1.1rem;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
+      background: var(--button-bg);
+      color: var(--text-color);
+      flex-grow: 1;
+      min-width: 80px;
+      transition: background 0.2s ease, transform 0.1s ease; /* Smooth transition for hover/active */
+    }
+    button:hover {
+      background: var(--button-hover-bg);
+    }
+    button:active { /* Visual feedback on press */
+      background: var(--button-active-bg);
+      transform: translateY(1px);
     }
     input[type="text"] {
-      font-size: 1rem;
-      padding: 0.5rem;
-      flex: 1;
+      font-size: 1.1rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--button-bg); /* Border matches button color for theme */
+      flex: 3;
+      min-width: 150px;
+      background: var(--log-bg);
+      color: var(--text-color);
+      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
     .log {
       background: var(--log-bg);
       padding: 1rem;
-      border-radius: 5px;
+      border-radius: 8px;
       margin-top: 1rem;
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
+      width: 100%;
+      max-width: 500px;
+      border: 1px solid var(--button-bg);
+      transition: background 0.3s ease, border-color 0.3s ease;
     }
     .log-entry {
-      margin: 0.2rem 0;
+      margin: 0.4rem 0;
+      padding-bottom: 0.2rem;
+      border-bottom: 1px dashed rgba(128, 128, 128, 0.3);
+    }
+    .log-entry:last-child {
+      border-bottom: none;
     }
     .toggle-theme {
       position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      font-size: 1.5rem;
+      top: 0.75rem;
+      right: 0.75rem;
+      font-size: 1.8rem;
       background: none;
       border: none;
       cursor: pointer;
+      color: var(--text-color);
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: background 0.2s ease, color 0.3s ease;
     }
+    .toggle-theme:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    [data-theme="dark"] .toggle-theme:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Specific styling for the play/pause button to stand out */
+    #playPauseBtn {
+      background-color: #4CAF50; /* Green */
+      color: white;
+      font-size: 1.5rem;
+    }
+    #playPauseBtn:hover {
+      background-color: #45a049;
+    }
+    #playPauseBtn:active {
+      background-color: #3d8c41;
+    }
+    [data-theme="dark"] #playPauseBtn {
+      background-color: #28a745;
+    }
+    [data-theme="dark"] #playPauseBtn:hover {
+      background-color: #218838;
+    }
+    [data-theme="dark"] #playPauseBtn:active {
+      background-color: #1e7e34;
+    }
+
+    #resetBtn {
+        background-color: #f44336; /* Red */
+        color: white;
+    }
+    #resetBtn:hover {
+        background-color: #da190b;
+    }
+    #resetBtn:active {
+        background-color: #c0160b;
+    }
+    [data-theme="dark"] #resetBtn {
+        background-color: #dc3545;
+    }
+    [data-theme="dark"] #resetBtn:hover {
+        background-color: #c82333;
+    }
+    [data-theme="dark"] #resetBtn:active {
+        background-color: #bd2130;
+    }
+
+    #copyLogBtn, #downloadLogBtn { /* Combined styling for copy and download */
+        background-color: #008CBA; /* Blue */
+        color: white;
+    }
+    #copyLogBtn:hover, #downloadLogBtn:hover {
+        background-color: #007bb5;
+    }
+    #copyLogBtn:active, #downloadLogBtn:active {
+        background-color: #006a9b;
+    }
+    [data-theme="dark"] #copyLogBtn, [data-theme="dark"] #downloadLogBtn {
+        background-color: #007bff;
+    }
+    [data-theme="dark"] #copyLogBtn:hover, [data-theme="dark"] #downloadLogBtn:hover {
+        background-color: #0069d9;
+    }
+    [data-theme="dark"] #copyLogBtn:active, [data-theme="dark"] #downloadLogBtn:active {
+        background-color: #0056b3;
+    }
+
+    .custom-tag-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        margin: 0.75rem 0;
+        width: 100%;
+        max-width: 500px;
+    }
+    .custom-tag-section button {
+        flex: 1;
+        min-width: 60px;
+    }
+
+    /* Specific styling for new cut/highlight buttons */
+    #cutStartBtn, #pickUpBtn {
+        background-color: #ff9800; /* Orange for cut markers */
+        color: white;
+    }
+    #cutStartBtn:hover, #pickUpBtn:hover {
+        background-color: #e68a00;
+    }
+    #cutStartBtn:active, #pickUpBtn:active {
+        background-color: #cc7a00;
+    }
+    [data-theme="dark"] #cutStartBtn, [data-theme="dark"] #pickUpBtn {
+        background-color: #fd7e14;
+    }
+    [data-theme="dark"] #cutStartBtn:hover, [data-theme="dark"] #pickUpBtn:hover {
+        background-color: #e66b0d;
+    }
+    [data-theme="dark"] #cutStartBtn:active, [data-theme="dark"] #pickUpBtn:active {
+        background-color: #d1610c;
+    }
+
+    #highlightBtn {
+        background-color: #673ab7; /* Purple for highlight */
+        color: white;
+    }
+    #highlightBtn:hover {
+        background-color: #5e35b1;
+    }
+    #highlightBtn:active {
+        background-color: #5530a6;
+    }
+    [data-theme="dark"] #highlightBtn {
+        background-color: #6f42c1;
+    }
+    [data-theme="dark"] #highlightBtn:hover {
+        background-color: #5f37aa;
+    }
+    [data-theme="dark"] #highlightBtn:active {
+        background-color: #523091;
+    }
+
+    #muteMicBtn {
+        background-color: #607d8b; /* Blue-grey for mute */
+        color: white;
+    }
+    #muteMicBtn:hover {
+        background-color: #546e7a;
+    }
+    #muteMicBtn:active {
+        background-color: #4a616d;
+    }
+    [data-theme="dark"] #muteMicBtn {
+        background-color: #6c757d;
+    }
+    [data-theme="dark"] #muteMicBtn:hover {
+        background-color: #5a6268;
+    }
+    [data-theme="dark"] #muteMicBtn:active {
+        background-color: #495156;
+    }
+
+    #clearLogBtn, #undoLogBtn { /* Styling for new log management buttons */
+        background-color: #9e9e9e; /* Grey */
+        color: white;
+    }
+    #clearLogBtn:hover, #undoLogBtn:hover {
+        background-color: #8a8a8a;
+    }
+    #clearLogBtn:active, #undoLogBtn:active {
+        background-color: #777777;
+    }
+    [data-theme="dark"] #clearLogBtn, [data-theme="dark"] #undoLogBtn {
+        background-color: #555555;
+    }
+    [data-theme="dark"] #clearLogBtn:hover, [data-theme="dark"] #undoLogBtn:hover {
+        background-color: #666666;
+    }
+    [data-theme="dark"] #clearLogBtn:active, [data-theme="dark"] #undoLogBtn:active {
+        background-color: #777777;
+    }
+
   </style>
 </head>
 <body>
@@ -82,53 +302,108 @@
   <div class="timer" id="timer">00:00:00</div>
 
   <div class="controls">
-    <button onclick="startTimer()">▶</button>
-    <button onclick="pauseTimer()">⏸</button>
-    <button onclick="resetTimer()">⏹</button>
+    <button id="playPauseBtn" onclick="toggleTimer()">▶</button>
+    <button id="resetBtn" onclick="resetTimer()">⏹</button>
   </div>
 
   <div class="tags">
-    <button onclick="logTag('CUTSCENE')">CUTSCENE</button>
-    <button onclick="logTag('BOSS FIGHT')">BOSS FIGHT</button>
-    <button onclick="logTag('CLIP')">CLIP</button>
-    <button onclick="logTag('CHAT')">CHAT</button>
+    <button id="cutStartBtn" onclick="logTag('CUT START')">CUT START</button>
+    <button id="pickUpBtn" onclick="logTag('PICK UP')">PICK UP</button>
+  </div>
+
+  <div class="tags">
+    <button id="highlightBtn" onclick="logTag('HIGHLIGHT')">HIGHLIGHT</button>
+    <button id="muteMicBtn" onclick="logTag('MUTE MIC')">MUTE MIC</button>
+  </div>
+
+  <div class="tags">
     <button onclick="logTag('BREAK')">BREAK</button>
-    <button onclick="logTag('MUTE MIC')">MUTE MIC</button>
+    <button onclick="logTag('CLIP')">CLIP</button>
   </div>
 
-  <div class="tags">
-    <input type="text" id="customTag" placeholder="Custom Tag">
-    <button onclick="logCustomTag()">Log Custom</button>
+  <div class="custom-tag-section">
+    <input type="text" id="customTag" placeholder="Custom Tag (e.g., CHAT, EASTER EGG)">
+    <button onclick="logCustomTag()">Log</button>
   </div>
 
   <div class="log" id="log"></div>
   <div class="controls">
-    <button onclick="copyLog()">Copy to Clipboard</button>
+    <button id="undoLogBtn" onclick="undoLastLogEntry()">Undo Last</button>
+    <button id="clearLogBtn" onclick="clearLog()">Clear Log</button>
   </div>
+  <div class="controls">
+    <button id="copyLogBtn" onclick="copyLog()">Copy to Clipboard</button>
+    <button id="downloadLogBtn" onclick="downloadLog()">Download Log</button>
+  </div>
+
 
   <script>
     let startTime = null;
     let timerInterval = null;
     let elapsed = 0;
-    const log = [];
+    const log = []; // Stores the raw log entries
+    const displayedLogElements = []; // Stores references to the HTML log entries
 
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const timerDisplay = document.getElementById('timer');
+    const logDiv = document.getElementById('log');
+
+    // --- Helper Functions ---
+    function saveState() {
+      localStorage.setItem('timerElapsed', elapsed);
+      localStorage.setItem('logEntries', JSON.stringify(log));
+    }
+
+    function loadState() {
+      const savedElapsed = localStorage.getItem('timerElapsed');
+      const savedLog = localStorage.getItem('logEntries');
+
+      if (savedElapsed) {
+        elapsed = parseInt(savedElapsed, 10);
+        updateDisplay();
+      }
+
+      if (savedLog) {
+        const parsedLog = JSON.parse(savedLog);
+        parsedLog.forEach(entry => {
+          // Re-add entries to the log and display, but without triggering logTag's full logic
+          // to avoid duplicate timestamps or re-adding emojis.
+          // This assumes `entry` in localStorage is already formatted.
+          log.push(entry);
+          const div = document.createElement('div');
+          div.className = 'log-entry';
+          div.textContent = entry;
+          logDiv.prepend(div);
+          displayedLogElements.unshift(div); // Keep track of elements
+        });
+        logDiv.scrollTop = 0;
+      }
+    }
+
+    // --- Core Timer Functions ---
     function updateDisplay() {
       const totalSeconds = Math.floor(elapsed / 1000);
       const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
       const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
       const seconds = String(totalSeconds % 60).padStart(2, '0');
-      document.getElementById('timer').textContent = `${hours}:${minutes}:${seconds}`;
+      timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
     }
 
     function tick() {
       elapsed = Date.now() - startTime;
       updateDisplay();
+      saveState(); // Save state regularly
     }
 
     function startTimer() {
-      if (!startTime) {
+      if (!timerInterval) {
         startTime = Date.now() - elapsed;
         timerInterval = setInterval(tick, 250);
+        playPauseBtn.textContent = '⏸';
+        timerDisplay.classList.add('running'); // Add running class for visual feedback
+        // Apply theme-specific color for pause state
+        playPauseBtn.style.backgroundColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#ffc107' : '#f0ad4e';
+        playPauseBtn.style.color = document.documentElement.getAttribute('data-theme') === 'dark' ? '#212529' : 'white';
       }
     }
 
@@ -136,24 +411,54 @@
       clearInterval(timerInterval);
       timerInterval = null;
       startTime = null;
+      playPauseBtn.textContent = '▶';
+      timerDisplay.classList.remove('running'); // Remove running class
+      // Apply theme-specific color for play state
+      playPauseBtn.style.backgroundColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#28a745' : '#4CAF50';
+      playPauseBtn.style.color = 'white';
+      saveState(); // Save state when pausing
+    }
+
+    function toggleTimer() {
+        if (timerInterval) {
+            pauseTimer();
+        } else {
+            startTimer();
+        }
     }
 
     function resetTimer() {
       pauseTimer();
       elapsed = 0;
       updateDisplay();
+      clearLog(); // Also clear the log when resetting the timer
+      saveState(); // Save state after reset
     }
 
+    // --- Log Management Functions ---
     function logTag(tag) {
-      const timestamp = document.getElementById('timer').textContent;
-      const entry = `${timestamp} — ${tag}`;
+      const timestamp = timerDisplay.textContent;
+      let entry = `${timestamp} — ${tag}`;
+
+      // Special formatting for specific tags
+      if (tag === 'CUT START') {
+          entry = `✂️ ${timestamp} — ${tag} ✂️`;
+      } else if (tag === 'PICK UP') {
+          entry = `✅ ${timestamp} — ${tag} ✅`;
+      } else if (tag === 'HIGHLIGHT') {
+          entry = `🌟 ${timestamp} — ${tag} 🌟`;
+      } else if (tag === 'MUTE MIC') {
+          entry = `🔇 ${timestamp} — ${tag} 🔇`;
+      }
+
       log.push(entry);
-      const logDiv = document.getElementById('log');
       const div = document.createElement('div');
       div.className = 'log-entry';
       div.textContent = entry;
-      logDiv.appendChild(div);
-      logDiv.scrollTop = logDiv.scrollHeight;
+      logDiv.prepend(div); // Add new entry to the top
+      displayedLogElements.unshift(div); // Keep track of elements
+      logDiv.scrollTop = 0; // Scroll to the top to see the latest entry
+      saveState(); // Save state after adding log
     }
 
     function logCustomTag() {
@@ -161,13 +466,41 @@
       const tag = input.value.trim();
       if (tag) {
         logTag(tag);
+        input.value = ''; // Clear the input field after logging
       }
     }
 
+    function undoLastLogEntry() {
+      if (log.length > 0) {
+        log.pop(); // Remove from raw log array
+        const removedElement = displayedLogElements.shift(); // Remove from displayed elements array
+        if (removedElement && removedElement.parentNode) {
+          removedElement.parentNode.removeChild(removedElement); // Remove from DOM
+        }
+        saveState(); // Save state after undo
+      }
+    }
+
+    function clearLog() {
+      if (confirm('Are you sure you want to clear the entire log? This cannot be undone.')) {
+        log.length = 0; // Clear the log array
+        displayedLogElements.length = 0; // Clear displayed elements array
+        logDiv.innerHTML = ''; // Clear the displayed log in DOM
+        saveState(); // Save state after clearing log
+      }
+    }
+
+    // --- Export Functions ---
+    function getFormattedLogContent() {
+        const sessionTitle = document.getElementById('sessionTitle').value.trim();
+        const header = sessionTitle ? sessionTitle + "\n\n" : "";
+        // Reverse the log array to copy/download in chronological order
+        const reversedLog = [...log].reverse();
+        return header + reversedLog.join('\n');
+    }
+
     function copyLog() {
-      const sessionTitle = document.getElementById('sessionTitle').value.trim();
-      const header = sessionTitle ? sessionTitle + "\n\n" : "";
-      const text = header + log.join('\n');
+      const text = getFormattedLogContent();
       const textarea = document.createElement('textarea');
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -181,21 +514,67 @@
       document.body.removeChild(textarea);
     }
 
+    function downloadLog() {
+      const text = getFormattedLogContent();
+      const sessionTitle = document.getElementById('sessionTitle').value.trim();
+      const filename = (sessionTitle || 'timestamps') + '.txt';
+
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href); // Clean up the URL object
+      alert('Log downloaded successfully!');
+    }
+
+    // --- Theme & Initialization ---
     function toggleTheme() {
       const html = document.documentElement;
       const toggleBtn = document.getElementById('themeToggle');
       const isDark = html.getAttribute('data-theme') === 'dark';
       html.setAttribute('data-theme', isDark ? 'light' : 'dark');
       toggleBtn.textContent = isDark ? '🌙' : '☀️';
+      // Re-apply button colors based on new theme
+      if (timerInterval) { // If timer is running (pause state)
+        playPauseBtn.style.backgroundColor = isDark ? '#ffc107' : '#f0ad4e';
+        playPauseBtn.style.color = isDark ? '#212529' : 'white';
+      } else { // If timer is paused (play state)
+        playPauseBtn.style.backgroundColor = isDark ? '#28a745' : '#4CAF50';
+        playPauseBtn.style.color = 'white';
+      }
     }
+
+    // Initialize theme based on user preference and load saved state
+    function initializeApp() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('themeToggle').textContent = '☀️';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.getElementById('themeToggle').textContent = '🌙';
+        }
+        loadState(); // Load timer and log from local storage
+        if (elapsed > 0) { // If there was a saved elapsed time, ensure timer display is updated and running class is set if needed
+            updateDisplay();
+            // We don't automatically restart the timer to avoid unexpected behavior on page reload.
+            // The user will have to manually press play.
+            // However, if it was running, the 'running' class should be applied for visual consistency.
+            // (We removed auto-restart as it can be jarring; manual restart is safer for user expectation)
+        }
+    }
+    initializeApp(); // Call on load
 
     // Prevent accidental refresh/navigation away
     window.addEventListener('beforeunload', function (e) {
-      if (log.length > 0) {
+      if (log.length > 0 && timerInterval) { // Only warn if timer is running AND log has entries
         e.preventDefault();
         e.returnValue = '';
       }
     });
+
   </script>
 </body>
 </html>
