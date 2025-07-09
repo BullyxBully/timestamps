@@ -14,6 +14,11 @@
       --log-bg: #fff;
       --timer-running-shadow: 0 0 15px rgba(76, 175, 80, 0.6); /* Green shadow */
       --timer-running-color: #4CAF50; /* Green text */
+      --offset-btn-bg: #6c757d; /* Muted color for offset button */
+      --offset-btn-hover: #5a6268;
+      --offset-btn-active: #495156;
+      --input-bg: #fff;
+      --input-border: #ccc;
     }
     [data-theme="dark"] {
       --bg-color: #1e1e1e;
@@ -24,6 +29,11 @@
       --log-bg: #2c2c2c;
       --timer-running-shadow: 0 0 15px rgba(40, 167, 69, 0.6); /* Darker green shadow */
       --timer-running-color: #28a745; /* Darker green text */
+      --offset-btn-bg: #5a5a5a;
+      --offset-btn-hover: #6a6a6a;
+      --offset-btn-active: #7a7a7a;
+      --input-bg: #2c2c2c;
+      --input-border: #444;
     }
     body {
       font-family: sans-serif;
@@ -85,10 +95,8 @@
       font-size: 1.1rem;
       padding: 0.8rem 1rem;
       border-radius: 8px;
-      border: 1px solid var(--button-bg); /* Border matches button color for theme */
-      flex: 3;
-      min-width: 150px;
-      background: var(--log-bg);
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
       color: var(--text-color);
       transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
@@ -203,6 +211,10 @@
         width: 100%;
         max-width: 500px;
     }
+    .custom-tag-section input {
+        flex: 3;
+        min-width: 150px;
+    }
     .custom-tag-section button {
         flex: 1;
         min-width: 60px;
@@ -289,6 +301,49 @@
         background-color: #777777;
     }
 
+    /* Styling for the new offset section */
+    .offset-section {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center; /* Align items vertically */
+        justify-content: center;
+        gap: 0.5rem; /* Reduced gap slightly for compact time input */
+        margin: 0.75rem 0;
+        width: 100%;
+        max-width: 500px;
+        padding-top: 1rem;
+        border-top: 1px solid var(--button-bg);
+    }
+    .offset-section .time-input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        flex: 2; /* Gives more space to the time inputs */
+        min-width: 150px;
+    }
+    .offset-section .time-input-group input {
+        width: 45px; /* Fixed width for HH, MM, SS inputs */
+        text-align: center;
+        padding: 0.8rem 0.2rem; /* Adjusted padding */
+        box-sizing: border-box; /* Include padding in width */
+    }
+    .offset-section .time-input-group span {
+        font-size: 1.1em; /* Make colons slightly larger */
+        font-weight: bold;
+        color: var(--text-color);
+    }
+    .offset-section button {
+        flex: 1; /* Allow button to grow */
+        background-color: var(--offset-btn-bg);
+        color: white;
+        min-width: 90px; /* Ensure button is not too small */
+    }
+    .offset-section button:hover {
+        background-color: var(--offset-btn-hover);
+    }
+    .offset-section button:active {
+        background-color: var(--offset-btn-active);
+    }
   </style>
 </head>
 <body>
@@ -331,6 +386,16 @@
     <button id="undoLogBtn" onclick="undoLastLogEntry()">Undo Last</button>
     <button id="clearLogBtn" onclick="clearLog()">Clear Log</button>
   </div>
+  <div class="offset-section">
+    <div class="time-input-group">
+      <input type="text" id="offsetHours" placeholder="HH" maxlength="2" inputmode="numeric" pattern="[0-9]*">
+      <span>:</span>
+      <input type="text" id="offsetMinutes" placeholder="MM" maxlength="2" inputmode="numeric" pattern="[0-9]*">
+      <span>:</span>
+      <input type="text" id="offsetSeconds" placeholder="SS" maxlength="2" inputmode="numeric" pattern="[0-9]*">
+    </div>
+    <button onclick="applyTimeOffset()">Apply Offset</button>
+  </div>
   <div class="controls">
     <button id="copyLogBtn" onclick="copyLog()">Copy to Clipboard</button>
     <button id="downloadLogBtn" onclick="downloadLog()">Download Log</button>
@@ -340,53 +405,83 @@
   <script>
     let startTime = null;
     let timerInterval = null;
-    let elapsed = 0;
-    const log = []; // Stores the raw log entries
-    const displayedLogElements = []; // Stores references to the HTML log entries
+    let elapsed = 0; // Total milliseconds elapsed
+    const log = []; // Stores the raw log entries as formatted strings
+    const displayedLogElements = []; // Stores references to the HTML log entry div elements
 
     const playPauseBtn = document.getElementById('playPauseBtn');
     const timerDisplay = document.getElementById('timer');
     const logDiv = document.getElementById('log');
 
+    const offsetHoursInput = document.getElementById('offsetHours');
+    const offsetMinutesInput = document.getElementById('offsetMinutes');
+    const offsetSecondsInput = document.getElementById('offsetSeconds');
+
     // --- Helper Functions ---
+
+    // Converts HH:MM:SS string to milliseconds
+    function timeToMs(timeStr) {
+        const parts = timeStr.split(':').map(Number);
+        let ms = 0;
+        if (parts.length === 3) { // HH:MM:SS
+            ms = (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+        } else if (parts.length === 2) { // MM:SS (assume 0 hours)
+            ms = (parts[0] * 60 + parts[1]) * 1000;
+        } else if (parts.length === 1) { // SS (assume 0 hours, 0 minutes)
+            ms = parts[0] * 1000;
+        }
+        return ms;
+    }
+
+    // Converts milliseconds to HH:MM:SS string
+    function msToTime(totalMs) {
+        // Ensure totalMs is non-negative
+        if (totalMs < 0) totalMs = 0;
+
+        const totalSeconds = Math.floor(totalMs / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
     function saveState() {
       localStorage.setItem('timerElapsed', elapsed);
-      localStorage.setItem('logEntries', JSON.stringify(log));
+      localStorage.setItem('logEntries', JSON.stringify(log)); // Save the log as formatted strings
+      localStorage.setItem('sessionTitle', document.getElementById('sessionTitle').value);
     }
 
     function loadState() {
       const savedElapsed = localStorage.getItem('timerElapsed');
       const savedLog = localStorage.getItem('logEntries');
+      const savedTitle = localStorage.getItem('sessionTitle');
 
       if (savedElapsed) {
         elapsed = parseInt(savedElapsed, 10);
-        updateDisplay();
+        updateDisplay(); // Update timer display immediately
       }
 
       if (savedLog) {
         const parsedLog = JSON.parse(savedLog);
         parsedLog.forEach(entry => {
-          // Re-add entries to the log and display, but without triggering logTag's full logic
-          // to avoid duplicate timestamps or re-adding emojis.
-          // This assumes `entry` in localStorage is already formatted.
+          // Re-add entries to the log array and display them in DOM
           log.push(entry);
           const div = document.createElement('div');
           div.className = 'log-entry';
           div.textContent = entry;
-          logDiv.prepend(div);
+          logDiv.prepend(div); // Add to top for consistency
           displayedLogElements.unshift(div); // Keep track of elements
         });
         logDiv.scrollTop = 0;
+      }
+      if (savedTitle) {
+          document.getElementById('sessionTitle').value = savedTitle;
       }
     }
 
     // --- Core Timer Functions ---
     function updateDisplay() {
-      const totalSeconds = Math.floor(elapsed / 1000);
-      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-      const seconds = String(totalSeconds % 60).padStart(2, '0');
-      timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+      timerDisplay.textContent = msToTime(elapsed);
     }
 
     function tick() {
@@ -431,8 +526,7 @@
       pauseTimer();
       elapsed = 0;
       updateDisplay();
-      clearLog(); // Also clear the log when resetting the timer
-      saveState(); // Save state after reset
+      clearLog(); // Also clear the log when resetting the timer (calls saveState internally)
     }
 
     // --- Log Management Functions ---
@@ -489,6 +583,56 @@
         saveState(); // Save state after clearing log
       }
     }
+
+    // --- Offset Function ---
+    function applyTimeOffset() {
+        const hours = parseInt(offsetHoursInput.value, 10) || 0;
+        const minutes = parseInt(offsetMinutesInput.value, 10) || 0;
+        const seconds = parseInt(offsetSecondsInput.value, 10) || 0;
+
+        if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) ||
+            hours < 0 || minutes < 0 || minutes >= 60 || seconds < 0 || seconds >= 60) {
+            alert('Please enter a valid time offset (HH:MM:SS). Minutes and Seconds must be between 0 and 59.');
+            return;
+        }
+
+        const offsetMs = (hours * 3600 + minutes * 60 + seconds) * 1000;
+        if (offsetMs === 0 && log.length === 0 && elapsed === 0) {
+            alert('Offset is 0 and no log entries or timer running. No changes applied.');
+            return;
+        }
+
+        // Apply offset to current elapsed time
+        elapsed += offsetMs;
+        updateDisplay();
+
+        // Apply offset to all existing log entries
+        for (let i = 0; i < log.length; i++) {
+            const entry = log[i];
+            // Extract the timestamp part (e.g., "HH:MM:SS")
+            const timestampMatch = entry.match(/^([0-9]{2}:[0-9]{2}:[0-9]{2})/);
+            if (timestampMatch) {
+                const originalTimestampStr = timestampMatch[1];
+                const originalTimestampMs = timeToMs(originalTimestampStr);
+                const newTimestampMs = originalTimestampMs + offsetMs;
+                const newTimestampStr = msToTime(newTimestampMs);
+
+                // Replace the old timestamp with the new one in the log entry string
+                const newEntry = entry.replace(originalTimestampStr, newTimestampStr);
+                log[i] = newEntry; // Update in raw log array
+                // The displayedLogElements are in reverse order of how they appear in log array
+                // since we use prepend. So, to update element at log[i], we need to access
+                // displayedLogElements[displayedLogElements.length - 1 - i]
+                displayedLogElements[displayedLogElements.length - 1 - i].textContent = newEntry; // Update in DOM
+            }
+        }
+        alert(`Offset of ${msToTime(offsetMs)} applied successfully!`);
+        offsetHoursInput.value = '00'; // Clear the input fields and reset to '00'
+        offsetMinutesInput.value = '00';
+        offsetSecondsInput.value = '00';
+        saveState(); // Save state after applying offset
+    }
+
 
     // --- Export Functions ---
     function getFormattedLogContent() {
@@ -557,12 +701,8 @@
             document.getElementById('themeToggle').textContent = '🌙';
         }
         loadState(); // Load timer and log from local storage
-        if (elapsed > 0) { // If there was a saved elapsed time, ensure timer display is updated and running class is set if needed
-            updateDisplay();
-            // We don't automatically restart the timer to avoid unexpected behavior on page reload.
-            // The user will have to manually press play.
-            // However, if it was running, the 'running' class should be applied for visual consistency.
-            // (We removed auto-restart as it can be jarring; manual restart is safer for user expectation)
+        if (timerInterval) { // If timer was running based on re-loaded state
+            timerDisplay.classList.add('running');
         }
     }
     initializeApp(); // Call on load
@@ -574,6 +714,49 @@
         e.returnValue = '';
       }
     });
+
+    // Auto-save session title on input change
+    document.getElementById('sessionTitle').addEventListener('input', saveState);
+
+    // --- Input Formatting and Auto-Advance for HH:MM:SS fields ---
+    function setupTimeInput(inputElement, nextInputElement, maxValue) {
+        inputElement.addEventListener('input', function() {
+            let value = this.value.replace(/\D/g, ''); // Remove non-digits
+            this.value = value; // Update the input field
+
+            // Auto-advance logic
+            if (this.value.length === this.maxLength && nextInputElement) {
+                nextInputElement.focus();
+            }
+        });
+
+        inputElement.addEventListener('blur', function() {
+            let numVal = parseInt(this.value, 10);
+            if (isNaN(numVal) || numVal < 0) {
+                this.value = '00';
+            } else if (this.value.length === 1) {
+                this.value = '0' + this.value; // Add leading zero if only one digit
+            } else if (numVal > maxValue) { // Enforce max value
+                this.value = String(maxValue).padStart(2, '0');
+            } else if (this.value === '') { // If empty on blur, set to '00'
+                this.value = '00';
+            }
+        });
+
+        inputElement.addEventListener('focus', function() {
+            this.select(); // Select all text on focus for easy overwriting
+        });
+    }
+
+    // Setup each time input with its next element for auto-advance
+    setupTimeInput(offsetHoursInput, offsetMinutesInput, 999); // Max hours can be large
+    setupTimeInput(offsetMinutesInput, offsetSecondsInput, 59);
+    setupTimeInput(offsetSecondsInput, null, 59); // Seconds is the last, no next element
+
+    // Initialize inputs to '00' on load for consistency
+    offsetHoursInput.value = '00';
+    offsetMinutesInput.value = '00';
+    offsetSecondsInput.value = '00';
 
   </script>
 </body>
